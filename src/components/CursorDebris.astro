@@ -1,0 +1,125 @@
+---
+// 마우스 이동 시 블록 부스러기가 튀어 떨어지는 효과
+// 터치 기기 / '동작 줄이기' 설정에서는 비활성화됩니다.
+---
+
+<canvas id="debris-canvas" aria-hidden="true"></canvas>
+
+<script>
+  const canvas = document.getElementById("debris-canvas") as HTMLCanvasElement | null;
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (canvas && finePointer && !reduce) {
+    const ctx = canvas.getContext("2d")!;
+    const styles = getComputedStyle(document.documentElement);
+    const accent = styles.getPropertyValue("--accent").trim() || "#ffb000";
+    const colors = [accent, accent, "#5a6472", "#3b424d", "#e7e9ec"];
+
+    type Bit = { x: number; y: number; vx: number; vy: number; size: number; life: number; max: number; color: string };
+    const bits: Bit[] = [];
+    const MAX_BITS = 160;
+    let dpr = 1;
+    let lastX = -1;
+    let lastY = -1;
+    let running = false;
+
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const spawn = (x: number, y: number, count: number) => {
+      for (let i = 0; i < count; i++) {
+        if (bits.length >= MAX_BITS) bits.shift();
+        const max = 35 + Math.random() * 25;
+        bits.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 3,
+          vy: -Math.random() * 3 - 0.5,
+          size: [3, 4, 5, 6][Math.floor(Math.random() * 4)],
+          life: max,
+          max,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+    };
+
+    const frame = () => {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (let i = bits.length - 1; i >= 0; i--) {
+        const b = bits[i];
+        b.vy += 0.18; // 중력
+        b.vx *= 0.98;
+        b.x += b.vx;
+        b.y += b.vy;
+        b.life--;
+        if (b.life <= 0) {
+          bits.splice(i, 1);
+          continue;
+        }
+        // 수명이 다할수록 계단식으로 투명해짐
+        ctx.globalAlpha = Math.ceil((b.life / b.max) * 4) / 4;
+        const x = Math.round(b.x);
+        const y = Math.round(b.y);
+        ctx.fillStyle = "#090a0c";
+        ctx.fillRect(x - 1, y - 1, b.size + 2, b.size + 2);
+        ctx.fillStyle = b.color;
+        ctx.fillRect(x, y, b.size, b.size);
+      }
+      ctx.globalAlpha = 1;
+      if (bits.length > 0) {
+        requestAnimationFrame(frame);
+      } else {
+        running = false;
+      }
+    };
+
+    window.addEventListener(
+      "mousemove",
+      (e) => {
+        if (lastX < 0) {
+          lastX = e.clientX;
+          lastY = e.clientY;
+          return;
+        }
+        const dist = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+        if (dist < 14) return; // 일정 거리 이동할 때마다만 생성
+        lastX = e.clientX;
+        lastY = e.clientY;
+        spawn(e.clientX, e.clientY, Math.min(3, 1 + Math.floor(dist / 30)));
+        if (!running) {
+          running = true;
+          requestAnimationFrame(frame);
+        }
+      },
+      { passive: true },
+    );
+
+    // 클릭하면 블록이 부서지듯 크게 튐
+    window.addEventListener("mousedown", (e) => {
+      spawn(e.clientX, e.clientY, 14);
+      if (!running) {
+        running = true;
+        requestAnimationFrame(frame);
+      }
+    });
+  }
+</script>
+
+<style>
+  #debris-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 60;
+  }
+</style>

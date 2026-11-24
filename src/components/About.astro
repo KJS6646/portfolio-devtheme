@@ -1,38 +1,44 @@
 ---
 import { siteConfig } from "../config";
+import SectionHeader from "./SectionHeader.astro";
+
+const totalSkills = siteConfig.skills.reduce((n, g) => n + g.items.length, 0);
 ---
 
-<section id="about" class="p-8 sm:p-12 md:p-16 lg:p-24">
-  <div>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
-      <div class="lg:col-span-4">
-        <h2
-          class="text-3xl sm:text-4xl md:text-5xl xl:text-7xl font-bold text-gray-900"
-        >
-          About Me
-        </h2>
-        <div
-          class="w-[75px] h-[5px] mt-2 rounded-full"
-          style={`background-color: ${siteConfig.accentColor}`}
-        >
-        </div>
-      </div>
+<section id="about" class="px-6 py-20 sm:px-12 md:px-16 lg:px-24 lg:py-28">
+  <div class="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+    <SectionHeader index="01" title="ABOUT" subtitle="소개 · 기술 스택" />
 
-      <div class="lg:col-span-8 space-y-8">
-        <p class="text-lg sm:text-xl md:text-2xl leading-relaxed text-gray-600">
+    <div class="lg:col-span-8 space-y-10">
+      <div class="px-panel px-rivets p-6 sm:p-8">
+        <p class="font-pixel text-xs text-[var(--accent)] mb-4">&gt; cat about.txt</p>
+        <p class="text-base sm:text-lg leading-relaxed text-[var(--text)]">
           {siteConfig.aboutMe}
         </p>
+      </div>
 
-        <div class="pt-4">
-          <div class="flex flex-wrap gap-3">
-            {
-              siteConfig.skills.map((skill) => (
-                <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 text-gray-800 rounded-full text-sm sm:text-base md:text-lg font-medium hover:bg-gray-200 transition-colors duration-200">
-                  {skill}
-                </span>
-              ))
-            }
-          </div>
+      <div class="px-panel">
+        <div
+          class="flex items-center justify-between px-5 py-3 border-b-[3px] border-[var(--edge)] bg-[var(--panel-hi)]"
+        >
+          <span class="font-pixel text-sm text-[var(--text)]">INVENTORY / 기술 스택</span>
+          <span class="font-pixel text-xs text-[var(--muted)]">{totalSkills} ITEMS</span>
+        </div>
+        <div class="divide-y-2 divide-[var(--edge)]">
+          {
+            siteConfig.skills.map((group) => (
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-6 px-5 py-4 sm:items-center">
+                <h3 class="font-pixel text-xs tracking-widest uppercase text-[var(--accent)]">
+                  {group.category}
+                </h3>
+                <div class="sm:col-span-3 flex flex-wrap gap-2.5">
+                  {group.items.map((skill) => (
+                    <span class="px-chip">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            ))
+          }
         </div>
       </div>
     </div>

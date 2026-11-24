@@ -1,0 +1,80 @@
+---
+import { siteConfig } from "../config";
+
+const { social } = siteConfig;
+
+// Tabler Icons (MIT) 경로 데이터
+const links = [
+  {
+    href: social.email && `mailto:${social.email}`,
+    label: "Email",
+    external: false,
+    paths: [
+      "M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z",
+      "M3 7l9 6l9 -6",
+    ],
+  },
+  {
+    href: social.github,
+    label: "GitHub",
+    external: true,
+    paths: [
+      "M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5",
+    ],
+  },
+  {
+    href: social.instagram,
+    label: "Instagram",
+    external: true,
+    paths: [
+      "M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4z",
+      "M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0",
+      "M16.5 7.5v.01",
+    ],
+  },
+  {
+    href: social.linkedin,
+    label: "LinkedIn",
+    external: true,
+    paths: [
+      "M8 11v5",
+      "M8 8v.01",
+      "M12 16v-5",
+      "M16 16v-3a2 2 0 1 0 -4 0",
+      "M3 7a4 4 0 0 1 4 -4h10a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-10a4 4 0 0 1 -4 -4z",
+    ],
+  },
+].filter((link) => link.href);
+---
+
+<div class="flex gap-3">
+  {
+    links.map((link) => (
+      <a
+        href={link.href}
+        aria-label={link.label}
+        title={link.label}
+        class="px-icon-btn"
+        {...(link.external
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="square"
+          stroke-linejoin="miter"
+          class="h-5 w-5"
+          aria-hidden="true"
+        >
+          {link.paths.map((d) => (
+            <path d={d} />
+          ))}
+        </svg>
+      </a>
+    ))
+  }
+</div>

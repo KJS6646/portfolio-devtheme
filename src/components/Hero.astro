@@ -1,305 +1,236 @@
 ---
 import { siteConfig } from "../config";
+import SocialLinks from "./SocialLinks.astro";
+
+const stats = [
+  { value: siteConfig.careerYears, label: "YEARS", sub: "경력" },
+  { value: String(siteConfig.projects.length), label: "PROJECTS", sub: "수행 프로젝트" },
+  { value: String(siteConfig.certifications.length), label: "CERTS", sub: "자격증" },
+];
+
+/* ---------- 아이소메트릭 블록 탑 ---------- */
+type Kind = "steel" | "accent";
+const S = 44; // 블록 한 변
+const DX = S * Math.cos(Math.PI / 6);
+const DY = S / 2;
+
+const p = (x: number, y: number, z: number): [number, number] => [
+  (x - y) * DX,
+  (x + y) * DY - z * S,
+];
+
+const blocks: [number, number, number, Kind][] = [
+  // 1층
+  [0, 0, 0, "steel"], [1, 0, 0, "steel"], [2, 0, 0, "steel"],
+  [0, 1, 0, "steel"], [1, 1, 0, "steel"], [2, 1, 0, "steel"],
+  [0, 2, 0, "steel"], [1, 2, 0, "accent"], [2, 2, 0, "steel"],
+  // 2층
+  [0, 0, 1, "steel"], [1, 0, 1, "steel"], [2, 0, 1, "accent"],
+  [0, 1, 1, "steel"], [1, 1, 1, "steel"],
+  // 3층
+  [0, 0, 2, "accent"], [1, 0, 2, "steel"], [0, 1, 2, "steel"],
+  // 4층
+  [0, 0, 3, "steel"],
+];
+
+const palette: Record<Kind, { top: string; left: string; right: string }> = {
+  steel: { top: "#5a6472", left: "#3b424d", right: "#2c323b" },
+  accent: {
+    top: "var(--accent)",
+    left: "var(--accent-dark)",
+    right: "var(--accent-deep)",
+  },
+};
+
+const toPoints = (pts: [number, number][]) =>
+  pts.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(" ");
+
+// 면 안쪽에 철판 이음선(축소된 사각형)
+const inset = (pts: [number, number][], k = 0.62) => {
+  const cx = pts.reduce((s, [a]) => s + a, 0) / pts.length;
+  const cy = pts.reduce((s, [, b]) => s + b, 0) / pts.length;
+  return pts.map(([a, b]) => [cx + (a - cx) * k, cy + (b - cy) * k]) as [number, number][];
+};
+
+const cube = (x: number, y: number, z: number, kind: Kind) => {
+  const top = [p(x, y, z + 1), p(x + 1, y, z + 1), p(x + 1, y + 1, z + 1), p(x, y + 1, z + 1)];
+  const left = [p(x, y + 1, z + 1), p(x + 1, y + 1, z + 1), p(x + 1, y + 1, z), p(x, y + 1, z)];
+  const right = [p(x + 1, y, z + 1), p(x + 1, y + 1, z + 1), p(x + 1, y + 1, z), p(x + 1, y, z)];
+  const c = palette[kind];
+  return [
+    { pts: top, fill: c.top },
+    { pts: left, fill: c.left },
+    { pts: right, fill: c.right },
+  ].map((f) => ({ points: toPoints(f.pts), inner: toPoints(inset(f.pts)), fill: f.fill }));
+};
+
+const sorted = [...blocks].sort((a, b) => a[0] + a[1] + a[2] - (b[0] + b[1] + b[2]));
+const tower = sorted.map(([x, y, z, k]) => cube(x, y, z, k));
+const floating = cube(2, 2, 2.2, "accent");
+
+const all = [
+  ...blocks.flatMap(([x, y, z]) => [p(x, y + 1, z), p(x + 1, y, z), p(x, y, z + 1), p(x + 1, y + 1, z)]),
+  p(2, 3, 2.2),
+  p(3, 2, 2.2),
+  p(2, 2, 3.2),
+];
+const pad = 24;
+const minX = Math.min(...all.map(([a]) => a)) - pad;
+const maxX = Math.max(...all.map(([a]) => a)) + pad;
+const minY = Math.min(...all.map(([, b]) => b)) - pad;
+const maxY = Math.max(...all.map(([, b]) => b)) + pad;
+const viewBox = `${minX.toFixed(0)} ${minY.toFixed(0)} ${(maxX - minX).toFixed(0)} ${(maxY - minY).toFixed(0)}`;
 ---
 
-<div
-  id="hero"
-  class="relative isolate overflow-hidden bg-white py-24 md:h-screen"
-  style={`--accent-color: ${siteConfig.accentColor}`}
->
-  <!-- Gradient overlay -->
+<div id="hero" class="relative isolate overflow-hidden flex flex-col"
+  style="min-height: min(100svh, 960px)">
+  <!-- 배경 광원 -->
   <div
     class="absolute inset-0 -z-10"
-    style={`background: radial-gradient(ellipse 800px 1200px at 0% 0%, ${siteConfig.accentColor}40 0%, ${siteConfig.accentColor}25 20%, ${siteConfig.accentColor}10 40%, rgba(255, 255, 255, 0.3) 70%, rgba(255, 255, 255, 0.8) 90%, white 100%)`}
+    style="background: radial-gradient(ellipse 900px 700px at 15% 20%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%), radial-gradient(ellipse 700px 600px at 85% 70%, rgba(91, 141, 239, 0.10), transparent 70%);"
   >
   </div>
-  <svg
-    aria-hidden="true"
-    class="absolute inset-0 -z-10 size-full stroke-gray-200 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
+
+  <div
+    class="flex-1 w-full mx-auto px-6 sm:px-12 md:px-16 lg:px-24 pt-28 pb-16 grid grid-cols-[minmax(0,1fr)] lg:grid-cols-12 gap-12 items-center"
   >
-    <defs>
-      <pattern
-        x="50%"
-        y={-1}
-        id="0787a7c5-978c-4f66-83c7-11c213f99cb7"
-        width={200}
-        height={200}
-        patternUnits="userSpaceOnUse"
-      >
-        <path d="M.5 200V.5H200" fill="none"></path>
-      </pattern>
-      <pattern
-        id="programming-symbols"
-        x="0"
-        y="0"
-        width="400"
-        height="400"
-        patternUnits="userSpaceOnUse"
-      >
-        <text
-          x="50"
-          y="50"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="24"
-          transform="rotate(-15)">&lt;/&gt;</text
-        >
-        <text
-          x="150"
-          y="100"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="20"
-          transform="rotate(10)">{}</text
-        >
-        <text
-          x="250"
-          y="80"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="18"
-          transform="rotate(-5)">=&gt;</text
-        >
-        <text
-          x="100"
-          y="200"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="22"
-          transform="rotate(15)">[]</text
-        >
-        <text
-          x="300"
-          y="180"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="20"
-          transform="rotate(-10)">&lt;&gt;</text
-        >
-        <text
-          x="200"
-          y="250"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="24"
-          transform="rotate(5)">()</text
-        >
-        <text
-          x="50"
-          y="320"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="18"
-          transform="rotate(-8)">::</text
-        >
-        <text
-          x="350"
-          y="300"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="22"
-          transform="rotate(12)">==</text
-        >
-        <text
-          x="150"
-          y="350"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="20"
-          transform="rotate(-15)">++</text
-        >
-        <text
-          x="250"
-          y="370"
-          fill={siteConfig.accentColor}
-          font-family="monospace"
-          font-size="24"
-          transform="rotate(8)">;</text
-        >
-      </pattern>
-    </defs>
-    <rect
-      fill="url(#programming-symbols)"
-      width="100%"
-      height="100%"
-      opacity="0.2"></rect>
-    <rect
-      fill="url(#0787a7c5-978c-4f66-83c7-11c213f99cb7)"
-      width="100%"
-      height="100%"
-      stroke-width={0}></rect>
-  </svg>
-  <div class="h-full mx-auto p-8 sm:p-12 md:p-24 flex items-center">
-    <div>
-      <h2
-        class="text-pretty text-xl sm:text-2xl md:text-5xl font-bold tracking-tight text-gray-700 animate-fade-in"
-      >
-        Hello! 👋
-      </h2>
-      <h1
-        class="mt-6 sm:mt-8 md:mt-10 text-pretty text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold tracking-tight text-gray-800 animate-fade-in animation-delay-200"
-      >
-        I'm <span style={{ color: siteConfig.accentColor }}
-          >{siteConfig.name}</span
-        >
-      </h1>
-      <p
-        class="mt-4 sm:mt-6 md:mt-8 text-pretty text-base sm:text-lg md:text-xl/8 font-medium text-gray-600 animate-fade-in animation-delay-400"
-      >
-        {siteConfig.title}
+    <div class="lg:col-span-7 min-w-0">
+      <p class="font-pixel text-xs sm:text-sm text-[var(--muted)] flex items-center gap-3 px-rise">
+        <span class="px-led"></span>
+        SYSTEM ONLINE <span class="opacity-40">//</span> PLAYER_01
       </p>
+
+      <p class="mt-8 font-pixel text-lg sm:text-2xl text-[var(--accent)] px-rise" style="animation-delay: 0.1s">
+        Hello, World!
+      </p>
+
+      <h1
+        class="mt-4 font-pixel text-6xl sm:text-7xl md:text-8xl xl:text-9xl leading-none text-[var(--text)] px-rise"
+        style="animation-delay: 0.2s; text-shadow: 4px 4px 0 var(--accent-dark), 8px 8px 0 var(--edge);"
+      >
+        {siteConfig.name}
+      </h1>
+
+      <p
+        class="mt-8 font-pixel text-base sm:text-xl md:text-2xl text-[var(--text)] px-rise"
+        style="animation-delay: 0.3s"
+      >
+        <span class="text-[var(--accent)]">&gt;</span>
+        <span data-typing={siteConfig.title}>{siteConfig.title}</span><span
+          class="hero-cursor"
+          aria-hidden="true"></span>
+      </p>
+
+      <p
+        class="mt-6 max-w-2xl text-sm sm:text-base md:text-lg text-[var(--muted)] leading-relaxed border-l-4 border-[var(--accent)] pl-4 px-rise"
+        style="animation-delay: 0.4s"
+      >
+        "{siteConfig.tagline}"
+      </p>
+
+      <div class="mt-10 grid grid-cols-3 gap-3 sm:gap-5 max-w-xl px-rise" style="animation-delay: 0.5s">
+        {
+          stats.map((s) => (
+            <div class="px-panel px-rivets px-3 py-4 sm:px-5 sm:py-5">
+              <div class="font-pixel text-2xl sm:text-4xl text-[var(--accent)]" style="text-shadow: 3px 3px 0 var(--edge)">
+                {s.value}
+              </div>
+              <div class="mt-2 font-pixel text-[10px] sm:text-xs tracking-widest text-[var(--text)]">
+                {s.label}
+              </div>
+              <div class="text-[11px] sm:text-xs text-[var(--muted)]">{s.sub}</div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="mt-10 flex flex-wrap items-center gap-4 px-rise" style="animation-delay: 0.6s">
+        <a href="#projects" class="px-btn">▶ 프로젝트 보기</a>
+        <a href="#experience" class="px-btn px-btn--ghost">경력 보기</a>
+        <SocialLinks />
+      </div>
+    </div>
+
+    <!-- 블록 탑 -->
+    <div class="hidden lg:flex lg:col-span-5 justify-center px-rise" style="animation-delay: 0.3s">
+      <svg viewBox={viewBox} class="w-full max-w-[460px] h-auto drop-shadow-[10px_14px_0_rgba(0,0,0,0.45)]" aria-hidden="true">
+        {
+          tower.map((faces) => (
+            <g>
+              {faces.map((f) => (
+                <>
+                  <polygon points={f.points} style={`fill: ${f.fill}`} stroke="#090a0c" stroke-width="2.5" stroke-linejoin="miter" />
+                  <polygon points={f.inner} fill="none" stroke="rgba(0,0,0,0.28)" stroke-width="2" />
+                </>
+              ))}
+            </g>
+          ))
+        }
+        <g class="hero-float">
+          {
+            floating.map((f) => (
+              <>
+                <polygon points={f.points} style={`fill: ${f.fill}`} stroke="#090a0c" stroke-width="2.5" />
+                <polygon points={f.inner} fill="none" stroke="rgba(0,0,0,0.28)" stroke-width="2" />
+              </>
+            ))
+          }
+        </g>
+      </svg>
     </div>
   </div>
-  <div
-    class="absolute bottom-0 left-0 right-0 p-8 sm:p-12 md:p-24 flex gap-x-4 sm:gap-x-6 md:gap-x-8 text-gray-700 animate-fade-in animation-delay-600"
-  >
-    {
-      siteConfig.social?.email && (
-        <a
-          href={`mailto:${siteConfig.social.email}`}
-          aria-label="Email"
-          class="transition-colors duration-300 hover:text-[var(--accent-color)]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
-            <path d="M3 7l9 6l9 -6" />
-          </svg>
-        </a>
-      )
-    }
-    {
-      siteConfig.social?.linkedin && (
-        <a
-          href={siteConfig.social.linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="LinkedIn"
-          class="transition-colors duration-300 hover:text-[var(--accent-color)]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
-          >
-            <>
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M8 11v5" />
-              <path d="M8 8v.01" />
-              <path d="M12 16v-5" />
-              <path d="M16 16v-3a2 2 0 1 0 -4 0" />
-              <path d="M3 7a4 4 0 0 1 4 -4h10a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-10a4 4 0 0 1 -4 -4z" />
-            </>
-          </svg>
-        </a>
-      )
-    }
-    {
-      siteConfig.social?.twitter && (
-        <a
-          href={siteConfig.social.twitter}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Twitter"
-          class="transition-colors duration-300 hover:text-[var(--accent-color)]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
-          >
-            <>
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
-              <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
-            </>
-          </svg>
-        </a>
-      )
-    }
-    {
-      siteConfig.social?.github && (
-        <a
-          href={siteConfig.social.github}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-          class="transition-colors duration-300 hover:text-[var(--accent-color)]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
-          >
-            <>
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-            </>
-          </svg>
-        </a>
-      )
-    }
-  </div>
+
+  <div class="px-hazard"></div>
 </div>
 
+<script>
+  const el = document.querySelector<HTMLElement>("[data-typing]");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (el && !reduce) {
+    const text = el.dataset.typing ?? "";
+    el.textContent = "";
+    let i = 0;
+    setTimeout(function tick() {
+      el.textContent = text.slice(0, ++i);
+      if (i < text.length) setTimeout(tick, 70);
+    }, 700);
+  }
+</script>
+
 <style>
-  @keyframes fadeIn {
-    from {
+  .hero-cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    margin-left: 0.2em;
+    vertical-align: -0.12em;
+    background: var(--accent);
+    animation: cursor-blink 1s steps(1) infinite;
+  }
+
+  @keyframes cursor-blink {
+    50% {
       opacity: 0;
-      transform: translateY(20px);
     }
-    to {
-      opacity: 1;
+  }
+
+  .hero-float {
+    animation: float 3s steps(6) infinite alternate;
+  }
+
+  @keyframes float {
+    from {
       transform: translateY(0);
     }
+    to {
+      transform: translateY(-14px);
+    }
   }
 
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animation-delay-200 {
-    animation-delay: 0.2s;
-  }
-
-  .animation-delay-400 {
-    animation-delay: 0.4s;
-  }
-
-  .animation-delay-600 {
-    animation-delay: 0.6s;
+  @media (prefers-reduced-motion: reduce) {
+    .hero-cursor,
+    .hero-float {
+      animation: none;
+    }
   }
 </style>

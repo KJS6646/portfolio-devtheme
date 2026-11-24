@@ -1,5 +1,277 @@
 @import "tailwindcss";
 
+/* ============================================================
+   BLOCK FORGE THEME
+   픽셀 블록 + 산업 기계 질감 테마
+   강조색(--accent)은 config.ts의 accentColor에서 주입됩니다.
+   ============================================================ */
+
+:root {
+  --accent: #ffb000;
+  --accent-dark: color-mix(in srgb, var(--accent) 65%, black);
+  --accent-deep: color-mix(in srgb, var(--accent) 40%, black);
+
+  --bg: #14171c;
+  --bg-2: #1a1e24;
+  --panel: #232831;
+  --panel-hi: #2d343f;
+  --edge: #090a0c;
+  --rivet: #4b5462;
+  --text: #e7e9ec;
+  --muted: #9aa3ae;
+  --led: #4ade80;
+
+  --font-pixel: "Galmuri11", "GalmuriMono11", monospace;
+  --font-body: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
 body {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-body);
+  color: var(--text);
+  background-color: var(--bg);
+  /* 블록 이음매 격자 */
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.028) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 2px, transparent 2px);
+  background-size: 48px 48px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--edge);
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 철판 패널 ---------- */
+.px-panel {
+  position: relative;
+  background-color: var(--panel);
+  border: 3px solid var(--edge);
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.07),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    6px 6px 0 0 var(--edge);
+  transition:
+    transform 0.15s steps(2),
+    box-shadow 0.15s steps(2);
+}
+
+.px-panel--hover:hover {
+  transform: translate(-3px, -3px);
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.07),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    9px 9px 0 0 var(--edge),
+    9px 9px 0 3px var(--accent-deep);
+}
+
+/* 네 모서리 리벳 */
+.px-rivets::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--rivet), var(--rivet)) top left / 4px 4px no-repeat,
+    linear-gradient(var(--rivet), var(--rivet)) top right / 4px 4px no-repeat,
+    linear-gradient(var(--rivet), var(--rivet)) bottom left / 4px 4px no-repeat,
+    linear-gradient(var(--rivet), var(--rivet)) bottom right / 4px 4px no-repeat;
+}
+
+/* ---------- 블록 칩 (기술 태그) ---------- */
+.px-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-pixel);
+  font-size: 0.8125rem;
+  line-height: 1;
+  color: var(--text);
+  padding: 0.5rem 0.7rem;
+  background: var(--panel-hi);
+  border: 2px solid var(--edge);
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.px-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  box-shadow: 1px 1px 0 var(--edge);
+}
+
+.px-chip--plain::before {
+  display: none;
+}
+
+/* ---------- 블록 버튼 ---------- */
+.px-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-pixel);
+  font-size: 0.95rem;
+  padding: 0.85rem 1.3rem;
+  color: var(--edge);
+  background: var(--accent);
+  border: 3px solid var(--edge);
+  box-shadow:
+    inset 4px 4px 0 rgba(255, 255, 255, 0.35),
+    inset -4px -4px 0 rgba(0, 0, 0, 0.25),
+    4px 4px 0 var(--edge);
+  transition:
+    transform 0.08s steps(1),
+    box-shadow 0.08s steps(1);
+}
+
+.px-btn:hover {
+  filter: brightness(1.08);
+}
+
+.px-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow:
+    inset 4px 4px 0 rgba(0, 0, 0, 0.25),
+    inset -4px -4px 0 rgba(255, 255, 255, 0.2);
+}
+
+.px-btn--ghost {
+  color: var(--text);
+  background: var(--panel-hi);
+  box-shadow:
+    inset 4px 4px 0 rgba(255, 255, 255, 0.08),
+    inset -4px -4px 0 rgba(0, 0, 0, 0.35),
+    4px 4px 0 var(--edge);
+}
+
+.px-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text);
+  background: var(--panel-hi);
+  border: 3px solid var(--edge);
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.08),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    3px 3px 0 var(--edge);
+  transition:
+    transform 0.08s steps(1),
+    color 0.15s;
+}
+
+.px-icon-btn:hover {
+  color: var(--accent);
+}
+
+.px-icon-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+/* ---------- 섹션 제목 ---------- */
+.px-section-label {
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+}
+
+.px-section-title {
+  font-family: var(--font-pixel);
+  color: var(--text);
+  line-height: 1.1;
+  text-shadow: 4px 4px 0 var(--edge);
+}
+
+/* 계단식 블록 바 */
+.px-steps {
+  display: flex;
+  gap: 4px;
+}
+
+.px-steps > span {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: 2px solid var(--edge);
+}
+
+.px-steps > span:nth-child(2) {
+  opacity: 0.6;
+}
+
+.px-steps > span:nth-child(3) {
+  opacity: 0.3;
+}
+
+/* ---------- 경고 줄무늬 ---------- */
+.px-hazard {
+  height: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--accent) 0 14px,
+    var(--edge) 14px 28px
+  );
+  border-block: 2px solid var(--edge);
+}
+
+/* ---------- LED ---------- */
+.px-led {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--led);
+  border: 2px solid var(--edge);
+  box-shadow: 0 0 8px var(--led);
+  animation: px-blink 1.6s steps(1) infinite;
+}
+
+@keyframes px-blink {
+  50% {
+    opacity: 0.25;
+    box-shadow: none;
+  }
+}
+
+/* ---------- 등장 애니메이션 (계단식) ---------- */
+@keyframes px-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.px-rise {
+  opacity: 0;
+  animation: px-rise 0.5s steps(5) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-rise {
+    animation: none;
+    opacity: 1;
+  }
+  .px-led {
+    animation: none;
+  }
 }
